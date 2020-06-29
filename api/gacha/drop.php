@@ -1,4 +1,5 @@
 <?php
+require_once('../Define.php');
 /**
  * ガチャAPI
  *
@@ -26,16 +27,16 @@ $uid = isset($_GET['uid'])?  $_GET['uid']:null;
 
 // Validation
 if( ($uid === null) || (!is_numeric($uid)) ){
-  sendResponse(false, 'Invalid uid');
+    Define::sendResponse(false, 'Invalid uid');
   exit(1);
 }
 
 //-------------------------------------------------
 // 準備
 //-------------------------------------------------
-$dsn  = 'mysql:dbname=sgrpg;host=127.0.0.1';  // 接続先を定義
-$user = 'senpai';      // MySQLのユーザーID
-$pw   = 'indocurry';   // MySQLのパスワード
+$dsn  = Define::$dsn;  // 接続先を定義
+$user = Define::$user;      // MySQLのユーザーID
+$pw   = Define::$pw;   // MySQLのパスワード
 
 //---------------------------
 // 実行したいSQL
@@ -73,13 +74,13 @@ try{
 
   // ユーザーが存在しているかチェック
   if( $buff === false ){
-    sendResponse(false, 'Not Found User');
+    Define::sendResponse(false, 'Not Found User');
     exit(1);
   }
 
   // 残高が足りているかチェック
   if( $buff['money'] < GACHA_PRICE ){
-    sendResponse(false, 'The balance is not enough');
+    Define::sendResponse(false, 'The balance is not enough');
     exit(1);
   }
 
@@ -120,7 +121,7 @@ catch( PDOException $e ) {
   // ロールバック
   $dbh->rollBack();
 
-  sendResponse(false, 'Database error: '.$e->getMessage());  // 本来エラーメッセージはサーバ内のログへ保存する(悪意のある人間にヒントを与えない)
+  Define::sendResponse(false, 'Database error: '.$e->getMessage());  // 本来エラーメッセージはサーバ内のログへ保存する(悪意のある人間にヒントを与えない)
   exit(1);
 }
 
@@ -129,11 +130,11 @@ catch( PDOException $e ) {
 //-------------------------------------------------
 // データが0件
 if( $buff === false ){
-  sendResponse(false, 'System Error');
+    Define::sendResponse(false, 'System Error');
 }
 // データを正常に取得
 else{
-  sendResponse(true, $chara);
+    Define::sendResponse(true, $chara);
 }
 
 
@@ -144,10 +145,3 @@ else{
  * @param array   $value
  * @return void
  */
-function sendResponse($status, $value=[]){
-  header('Content-type: application/json');
-  echo json_encode([
-    'status' => $status,
-    'result' => $value
-  ]);
-}
