@@ -1,5 +1,4 @@
 <?php
-require_once('../Define.php');
 /**
  * MySQLに接続しデータを取得する
  *
@@ -10,47 +9,36 @@ require_once('../Define.php');
 // ini_set('error_reporting', E_ALL);
 
 //-------------------------------------------------
+// ライブラリ
+//-------------------------------------------------
+require_once("../util.php");
+require_once("../../model/user.php");
+
+//-------------------------------------------------
 // 引数を受け取る
 //-------------------------------------------------
-// ユーザーIDを受け取る
-$uid = isset($_GET['uid'])?  $_GET['uid']:null;
+$token = UserModel::getTokenfromQuery();
 
-// Validation
-if( ($uid === null) || (!is_numeric($uid)) ){
-  Define::sendResponse(false, 'Invalid uid');
+if( !$token ){
+  sendResponse(false, 'Invalid token');
   exit(1);
 }
-
-//-------------------------------------------------
-// 準備
-//-------------------------------------------------
-$dsn  = Define::$dsn;  // 接続先を定義
-$user = Define::$user;      // MySQLのユーザーID
-$pw   = Define::$pw;   // MySQLのパスワード
-
-// 実行したいSQL
-$sql = 'SELECT * FROM User WHERE id=:id';  // Userテーブルの指定列を取得
-
 
 //-------------------------------------------------
 // SQLを実行
 //-------------------------------------------------
 try{
-  $dbh = new PDO($dsn, $user, $pw);   // 接続
-  $dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);  // エラーモード
-  $sth = $dbh->prepare($sql);         // SQL準備
-
-  // プレースホルダに値を入れる
-  $sth->bindValue(':id', $uid, PDO::PARAM_INT);
-
-  // 実行
-  $sth->execute();
-
-  // 実行結果から1レコード取ってくる
-  $buff = $sth->fetch(PDO::FETCH_ASSOC);
+  $user = new UserModel();
+  $uid  = $user->getUserIdByToken($token);
+  if( $uid !== false ){
+    $buff = $user->getRecordById($uid);
+  }
+  else{
+    $buff = false;
+  }
 }
 catch( PDOException $e ) {
-  Define::sendResponse(false, 'Database error: '.$e->getMessage());  // 本来エラーメッセージはサーバ内のログへ保存する(悪意のある人間にヒントを与えない)
+  sendResponse(false, 'Database error: '.$e->getMessage());  // 本来エラーメッセージはサーバ内のログへ保存する(悪意のある人間にヒントを与えない)
   exit(1);
 }
 
@@ -59,18 +47,10 @@ catch( PDOException $e ) {
 //-------------------------------------------------
 // データが0件
 if( $buff === false ){
-  Define::sendResponse(false, 'Not Fund user');
+  sendResponse(false, 'Not Found user');
 }
 // データを正常に取得
 else{
-  Define::sendResponse(true, $buff);
+  sendResponse(true, $buff);
 }
 
-
-/**
- * 実行結果をJSON形式で返却する
- *
- * @param boolean $status
- * @param array   $value
- * @return void
- */
