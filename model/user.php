@@ -19,7 +19,8 @@ class UserModel extends Model{
     ['name'=>':lv',    'value'=>1,    'type'=>PDO::PARAM_INT],
     ['name'=>':exp',   'value'=>1,    'type'=>PDO::PARAM_INT],
     ['name'=>':money', 'value'=>3000, 'type'=>PDO::PARAM_INT],
-    ['name'=>':token', 'value'=>null, 'type'=>PDO::PARAM_STR]
+    ['name'=>':token', 'value'=>null, 'type'=>PDO::PARAM_STR],
+    ['name'=>':chara', 'value'=>null, 'type'=>PDO::PARAM_STR]
   ];
 
   // トークンの文字列長
@@ -52,7 +53,7 @@ class UserModel extends Model{
     $token = $this->_getToken();
 
     // ユーザーを追加
-    $sql1 = 'INSERT INTO User(lv, exp, money, token) VALUES(:lv, :exp, :money, :token)';
+    $sql1 = 'INSERT INTO User(lv, exp, money, token,chara) VALUES(:lv, :exp, :money, :token,:chara)';
     $this->defaultValue[3]['value'] = $token;
     $this->query($sql1, $this->defaultValue);
 
@@ -159,5 +160,21 @@ class UserModel extends Model{
       $len = self::TOKEN_LENGTH;
     }
     return( substr(bin2hex(random_bytes($len)), 0, $len) );
+  }
+
+    /**
+   * 
+   *
+   * @param integer $uid
+   * 
+   */
+  function getChara($uid){
+    $sql = 'SELECT distinct chara_id FROM UserChara WHERE user_id=:userid';
+    $bind = [
+    	['name'=>':userid', 'value'=>$uid,   'type'=>PDO::PARAM_INT]
+     ];
+     $this->query($sql, $bind);
+     $buff = $this->fetch();
+     return($buff['chara_id']);
   }
 }
