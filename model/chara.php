@@ -12,12 +12,12 @@ class CharaModel extends Model{
 
 
   /**
-   * キャラクターを所有する
+   *
    *
    * @param integer $charaid
    * 
    */
-  function getChara($charaid){
+  function getCharaName($charaid){
     $sql = 'SELECT * FROM Chara WHERE id in(:charaid)';
     $bind = [
     	['name'=>':userid', 'value'=>$charaid,   'type'=>PDO::PARAM_INT]
